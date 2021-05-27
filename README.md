@@ -300,3 +300,46 @@ Add to your `config.xml`
 Verify the Icons on Android and iOS
 
 ![Cordova Icons](./CordovaIcons.png)
+
+# 6th Commit - Add Splash Screens
+
+```
+npm run cordova plugin add cordova-plugin-splashscreen
+```
+
+For both Android and iOS, you typically want your Splash Screen image to be centered and the main contents of the image to not be anywhere near the edges so that it doesn't accidentally get clipped.
+
+For Android, you need PNGs of size:
+
+- 300x300 - mdpi
+- 450x450 - hdpi
+- 600x600 - xhdpi
+- 900x900 - xxhdpi
+- 1200x1200 - xxxhdpi
+
+For iOS, you can use a single universal image of size:
+
+- 2732x2732 - universal
+
+You can set the SplashScreen delay, we chose 3 seconds to give the React app a little bit of time to load before displaying it.
+
+Add to your `config.xml`
+
+```
+    <!-- SPLASH SCREENS -->
+    <platform name="android">
+        <splash src="SplashScreens/android/port-hdpi.png" density="hdpi"/>
+        <splash src="SplashScreens/android/port-mdpi.png" density="mdpi"/>
+        <splash src="SplashScreens/android/port-xhdpi.png" density="xhdpi"/>
+        <splash src="SplashScreens/android/port-xxhdpi.png" density="xxhdpi"/>
+        <splash src="SplashScreens/android/port-xxxhdpi.png" density="xxxhdpi"/>
+    </platform>
+    <platform name="ios">
+        <splash src="SplashScreens/ios/Default@2x~universal~anyany.png" />
+    </platform>
+    <preference name="SplashScreenDelay" value="3000" />
+```
+
+Verify the SplashScreens on Android and iOS
+
+![Cordova Splash Screen](./CordovaSplashScreens.png)

@@ -70,4 +70,17 @@
         <icon src="AppIcons/android/mipmap-xxhdpi/ic_launcher.png" density="xxhdpi" />
         <icon src="AppIcons/android/mipmap-xxxhdpi/ic_launcher.png" density="xxxhdpi" />
     </platform>
+
+    <!-- SPLASH SCREENS -->
+    <platform name="android">
+        <splash src="SplashScreens/android/port-hdpi.png" density="hdpi"/>
+        <splash src="SplashScreens/android/port-mdpi.png" density="mdpi"/>
+        <splash src="SplashScreens/android/port-xhdpi.png" density="xhdpi"/>
+        <splash src="SplashScreens/android/port-xxhdpi.png" density="xxhdpi"/>
+        <splash src="SplashScreens/android/port-xxxhdpi.png" density="xxxhdpi"/>
+    </platform>
+    <platform name="ios">
+        <splash src="SplashScreens/ios/Default@2x~universal~anyany.png" />
+    </platform>
+    <preference name="SplashScreenDelay" value="3000" />
 </widget>
