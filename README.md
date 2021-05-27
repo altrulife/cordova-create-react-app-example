@@ -210,3 +210,35 @@ npm run cordova run android
 
     <div id="root" style="height: 100%; width: 100%;"></div>
 ```
+
+# 4th Commit - Add cordova-plugin-remote-injection and verify access on React app
+
+Temporarily add this to your React public/index.html
+
+```
+    <script>
+      document.addEventListener('deviceready', () => alert('it works!'), false);
+    </script>
+```
+
+You can verify that this "alert" does not display before you add the plugin.
+
+Add the cordova-plugin-remote-injection plugin to your Cordova app
+
+```
+npm run cordova plugin add cordova-plugin-remote-injection
+```
+
+Start React app and run Cordova to verify access to injected Cordova javascript on React app
+
+```
+yarn start
+
+...
+
+npm run cordova run ios
+```
+
+![Cordova with Remote Injection Plugin - initial](./CordovaRemoteInjection.png)
+
+Remove the `<script></script>` from public/index.html because we were just using that to test.
