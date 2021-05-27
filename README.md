@@ -129,3 +129,84 @@ npm run cordova run android
 ```
 
 ![Cordova Run Android - initial](./CordovaRunAndroid-initial.png)
+
+# 3rd Commit - Run React app and load inside of Cordova
+
+## Modify config.xml with the following
+
+```
+<widget id="io.ryseapp.ryse" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <content src="http://localhost:3000" />
+    <allow-navigation href="http://localhost:3000/*" />
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+    </platform>
+
+```
+
+Note: we can remove everything under the `www` folder, because we're loading a hosted app and not a bundled one.  However, Cordova still requires a `www` folder to exist to run, so I just create a file named `_cordova-requires-www-folder-to-start` to avoid confusion.
+
+## Start the React app and run Cordova on iOS and Android
+
+Start React app in terminal
+
+navigate to app root directory
+
+```
+yarn start
+```
+
+Run Cordova on iOS and Android in another terminal
+
+```
+cd cordova
+npm run cordova run ios
+npm run cordova run android
+```
+
+![Cordova Run with React App - initial](./CordovaRunWithReactApp-initial.png)
+
+## Modify React app public/index.html so that it looks and feels native instead of in a nested browser
+
+```
+  ...
+
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1.0, height=device-height, width=device-width, viewport-fit=cover, user-scalable=no">
+
+  ...
+
+    <style>
+      html {
+          border: 0;
+          margin: 0;
+          padding:0px;
+          width: 100%;
+          /* has to be vh and not % for IOS to fill entire phone screen */
+          height: 100vh;
+          overflow: hidden;
+      }
+      body {
+          border: 0;
+          margin: 0;
+          padding:0px;
+          /* Padding to avoid the "unsafe" areas behind notches in the screen */
+          padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+          position: fixed;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+      }
+      * {
+          box-sizing: border-box;
+      }
+    </style>
+
+  ...
+
+    <div id="root" style="height: 100%; width: 100%;"></div>
+```
