@@ -135,8 +135,8 @@ npm run cordova run android
 ```
 <widget id="io.ryseapp.ryse" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <content src="http://localhost:3000" />
-    <allow-navigation href="http://localhost:3000/*" />
+    <content src="http://192.168.1.250:3000" />
+    <allow-navigation href="http://192.168.1.250:3000/*" />
     <platform name="android">
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
             <application android:usesCleartextTraffic="true" />
