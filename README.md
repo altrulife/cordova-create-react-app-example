@@ -2,15 +2,13 @@
 
 ### Requirements
 
- - Deploy React app as a hosted web app separate from the native Cordova app
+ - Ability to build and deploy web app separately from Cordova app
  - Build native Cordova app shell for Android and iOS that loads the hosted web app
- - Push notifications for iOS and Android
- - Inject Cordova javascript into web app so it can interact with native Cordova app
+ - Inject Cordova javascript into web app so it can interact with Cordova app and enable native functionality
 
 ### Cordova Plugins Used
 
  - cordova-plugin-whitelist (so our native Cordova app can only load URLs specified)
- - @havesource/cordova-plugin-push (Cordova push notification support for iOS and Android)
  - cordova-plugin-remote-injection (inject Cordova javascript into Hosted remote app to access native functionality)
 
 # 1st Commit - Initial CRA and Cordova Setup
