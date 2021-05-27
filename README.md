@@ -242,3 +242,61 @@ npm run cordova run ios
 ![Cordova with Remote Injection Plugin - initial](./CordovaRemoteInjection.png)
 
 Remove the `<script></script>` from public/index.html because we were just using that to test.
+
+# 5th Commit - Add Icons for iOS and Android
+
+Use https://appicon.co/ to Upload your icon (public/logo512.png for default Create React App)
+
+Click Generate and Unzip the AppIcons folder and move it under /cordova
+
+![App Icon Generator](./AppIconGenerator.png)
+
+Add to your `config.xml`
+
+```
+    <!-- ICONS -->
+    <platform name="ios">
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/16.png" width="16" height="16" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/20.png" width="20" height="20" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/29.png" width="29" height="29" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/32.png" width="32" height="32" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/40.png" width="40" height="40" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/48.png" width="48" height="48" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/50.png" width="50" height="50" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/55.png" width="55" height="55" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/57.png" width="57" height="57" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/58.png" width="58" height="58" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/60.png" width="60" height="60" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/64.png" width="64" height="64" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/72.png" width="72" height="72" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/76.png" width="76" height="76" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/80.png" width="80" height="80" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/87.png" width="87" height="87" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/88.png" width="88" height="88" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/100.png" width="100" height="100" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/114.png" width="114" height="114" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/120.png" width="120" height="120" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/128.png" width="128" height="128" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/144.png" width="144" height="144" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/152.png" width="152" height="152" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/167.png" width="167" height="167" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/172.png" width="172" height="172" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/180.png" width="180" height="180" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/196.png" width="196" height="196" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/216.png" width="216" height="216" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/256.png" width="256" height="256" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/512.png" width="512" height="512" />
+        <icon src="AppIcons/Assets.xcassets/AppIcon.appiconset/1024.png" width="1024" height="1024" />
+    </platform>
+    <platform name="android">
+        <icon src="AppIcons/android/mipmap-mdpi/ic_launcher.png" density="mdpi" />
+        <icon src="AppIcons/android/mipmap-hdpi/ic_launcher.png" density="hdpi" />
+        <icon src="AppIcons/android/mipmap-xhdpi/ic_launcher.png" density="xhdpi" />
+        <icon src="AppIcons/android/mipmap-xxhdpi/ic_launcher.png" density="xxhdpi" />
+        <icon src="AppIcons/android/mipmap-xxxhdpi/ic_launcher.png" density="xxxhdpi" />
+    </platform>
+```
+
+Verify the Icons on Android and iOS
+
+![Cordova Icons](./CordovaIcons.png)
