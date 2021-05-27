@@ -83,4 +83,34 @@
         <splash src="SplashScreens/ios/Default@2x~universal~anyany.png" />
     </platform>
     <preference name="SplashScreenDelay" value="3000" />
+
+    <preference name="AllowBackForwardNavigationGestures" value="true" />
+
+    <!-- IOS App Bound Domains -->
+    <platform name="ios">
+        <config-file target="*-Info.plist" parent="WKAppBoundDomains">
+            <array>
+                <!-- <string>{YOUR_DOMAIN}</string> -->
+                <!-- <string>auth.{YOUR_DOMAIN}</string> -->
+                <string>http://192.168.1.250:3000</string>
+            </array>
+        </config-file>
+        <preference name="LimitsNavigationsToAppBoundDomains" value="true" />
+    </platform>
+
+    <!-- Misc permissions you may want in your app -->
+    <platform name="ios">
+        <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+            <string>need camera access to take pictures</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+            <string>need photo library access to get pictures from there</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+            <string>need location access to find things nearby</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSPhotoLibraryAddUsageDescription">
+            <string>need photo library access to save pictures there</string>
+        </config-file>
+    </platform>
 </widget>

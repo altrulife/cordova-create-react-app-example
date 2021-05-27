@@ -1,0 +1,12 @@
+diff --git a/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m b/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m
+index a07bf29..5a378ea 100644
+--- a/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m
++++ b/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m
+@@ -73,6 +73,7 @@
+ {
+     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+     configuration.processPool = [[CDVWebViewProcessPoolFactory sharedFactory] sharedProcessPool];
++    configuration.limitsNavigationsToAppBoundDomains = [settings cordovaBoolSettingForKey:@"LimitsNavigationsToAppBoundDomains" defaultValue:NO];
+     if (settings == nil) {
+         return configuration;
+     }

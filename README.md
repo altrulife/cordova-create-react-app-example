@@ -1,4 +1,4 @@
-# Example of wrapping Create React App with Cordova
+# Step by step guide to wrapping Create React App with Cordova
 
 ### Requirements
 
@@ -343,3 +343,318 @@ Add to your `config.xml`
 Verify the SplashScreens on Android and iOS
 
 ![Cordova Splash Screen](./CordovaSplashScreens.png)
+
+# 7th Commit - Add permissions, preferences, and patch cordova-ios and cordova-plugin-remote-injection to allow upload to App Store
+
+One risk with using Cordova is that the App Store or Play Store can suddenly refuse your app for certain security or deprecation reasons
+
+Because of this, we had to use [patch-package](https://github.com/ds300/patch-package) library to add and remove some code from cordova-ios and cordova-plugin-remote-injection libraries.  Some of these libraries are no longer maintained or don't fit our exact use case, so we had to patch them ourselves.
+
+## Install patch-package
+
+First install [patch-package](https://github.com/ds300/patch-package) in our `cordova` folder
+
+```
+npm install patch-package -D
+```
+
+add `postinstall` to `scripts` in cordova/package.json
+
+```
+  "scripts": {
+    "cordova": "cordova",
+    "postinstall": "patch-package"
+  },
+```
+
+## Patch cordova-ios to include limitsNavigationsToAppBoundDomains
+
+Patch the `cordova-ios` (6.2.0) package to include the `limitsNavigationsToAppBoundDomains` setting
+
+Normally, we would modify the `cordova-ios` package in `node_modules` and then run patch-package to generate a patch file for us, but I have already done this and this is the generated patch file:
+
+Make a `patches` directory under `cordova` and add `cordova-ios+6.2.0.patch` file under there
+
+cordova-ios+6.2.0.patch
+
+```
+diff --git a/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m b/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m
+index a07bf29..5a378ea 100644
+--- a/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m
++++ b/node_modules/cordova-ios/CordovaLib/Classes/Private/Plugins/CDVWebViewEngine/CDVWebViewEngine.m
+@@ -73,6 +73,7 @@
+ {
+     WKWebViewConfiguration* configuration = [[WKWebViewConfiguration alloc] init];
+     configuration.processPool = [[CDVWebViewProcessPoolFactory sharedFactory] sharedProcessPool];
++    configuration.limitsNavigationsToAppBoundDomains = [settings cordovaBoolSettingForKey:@"LimitsNavigationsToAppBoundDomains" defaultValue:NO];
+     if (settings == nil) {
+         return configuration;
+     }
+
+```
+
+## Patch cordova-plugin-remote-injection to remove deprecated UIWebView references
+
+Under `cordova/patches` directory add `cordova-plugin-remote-injection+0.5.2.patch` file under there
+
+cordova-plugin-remote-injection+0.5.2
+
+```
+diff --git a/node_modules/cordova-plugin-remote-injection/plugin.xml b/node_modules/cordova-plugin-remote-injection/plugin.xml
+index 9c79964..7164046 100644
+--- a/node_modules/cordova-plugin-remote-injection/plugin.xml
++++ b/node_modules/cordova-plugin-remote-injection/plugin.xml
+@@ -18,8 +18,6 @@
+     <source-file src="src/ios/CDVRemoteInjection.m" />
+     <header-file src="src/ios/CDVRemoteInjectionWebViewBaseDelegate.h" />
+     <source-file src="src/ios/CDVRemoteInjectionWebViewBaseDelegate.m" />
+-    <header-file src="src/ios/CDVRemoteInjectionUIWebViewDelegate.h" />
+-    <source-file src="src/ios/CDVRemoteInjectionUIWebViewDelegate.m" />
+     <header-file src="src/ios/CDVRemoteInjectionWKWebViewDelegate.h" />
+     <source-file src="src/ios/CDVRemoteInjectionWKWebViewDelegate.m" />
+   </platform>
+diff --git a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m
+index 9c11eb9..e152d3b 100644
+--- a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m
++++ b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m
+@@ -6,7 +6,6 @@
+ #import <WebKit/WebKit.h>
+ 
+ #import "CDVRemoteInjection.h"
+-#import "CDVRemoteInjectionUIWebViewDelegate.h"
+ #import "CDVRemoteInjectionWKWebViewDelegate.h"
+ 
+ @implementation CDVRemoteInjectionPlugin {
+@@ -81,13 +80,7 @@
+     }
+ 
+     id webView = [self findWebView];
+-    if ([webView isKindOfClass:[UIWebView class]]) {
+-        NSLog(@"Found UIWebView");
+-        webViewDelegate = [[CDVRemoteInjectionUIWebViewDelegate alloc] init];
+-        [webViewDelegate initializeDelegate:self];
+-        
+-        return;
+-    } else if ([webView isKindOfClass:[WKWebView class]]) {
++    if ([webView isKindOfClass:[WKWebView class]]) {
+         NSLog(@"Found WKWebView");
+         webViewDelegate = [[CDVRemoteInjectionWKWebViewDelegate alloc] init];
+         [webViewDelegate initializeDelegate:self];
+diff --git a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.h b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.h
+deleted file mode 100644
+index b451824..0000000
+--- a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.h
++++ /dev/null
+@@ -1,13 +0,0 @@
+-#import "CDVRemoteInjection.h"
+-#import "CDVRemoteInjectionWebViewBaseDelegate.h"
+-
+-@interface CDVRemoteInjectionUIWebViewDelegate: CDVRemoteInjectionWebViewBaseDelegate <CDVRemoteInjectionWebViewDelegate>
+-@property (readwrite, weak) CDVRemoteInjectionPlugin *plugin;
+-- (void) onWebViewDidStartLoad;
+-- (void) onWebViewDidFinishLoad:(UIWebView *)webView;
+-- (void) onWebViewFailLoadWithError:(NSError *)error;
+-@end
+-
+-@interface CDVRemoteInjectionUIWebViewNotificationDelegate : WrappedDelegateProxy <UIWebViewDelegate>
+-@property (readwrite, weak) CDVRemoteInjectionUIWebViewDelegate *webViewDelegate;
+-@end
+diff --git a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.m b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.m
+deleted file mode 100644
+index bb0251e..0000000
+--- a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.m
++++ /dev/null
+@@ -1,100 +0,0 @@
+-//
+-//  CDVRemoteInjection.m
+-//
+-
+-#import <Foundation/Foundation.h>
+-
+-#import "CDVRemoteInjectionUIWebViewDelegate.h"
+-#import "CDVRemoteInjectionWebViewBaseDelegate.h"
+-
+-
+-@implementation CDVRemoteInjectionUIWebViewNotificationDelegate
+-@dynamic wrappedDelegate;
+-
+-- (void)webViewDidStartLoad:(UIWebView*)webView
+-{
+-    [self.webViewDelegate onWebViewDidStartLoad];
+-    
+-    if ([self.wrappedDelegate respondsToSelector:@selector(webViewDidStartLoad:)]) {
+-        [self.wrappedDelegate webViewDidStartLoad:webView];
+-    }
+-}
+-
+-- (void)webViewDidFinishLoad:(UIWebView *)webView
+-{
+-    [self.webViewDelegate onWebViewDidFinishLoad:webView];
+-    
+-    if ([self.wrappedDelegate respondsToSelector:@selector(webViewDidFinishLoad:)]) {
+-        [self.wrappedDelegate webViewDidFinishLoad:webView];
+-    }
+-}
+-
+-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
+-{
+-    if ([self.wrappedDelegate respondsToSelector:@selector(webView:didFailLoadWithError:)]) {
+-        [self.wrappedDelegate webView:webView didFailLoadWithError:error];
+-    }
+-    
+-    [self.webViewDelegate onWebViewFailLoadWithError:error];
+-}
+-@end
+-
+-@implementation CDVRemoteInjectionUIWebViewDelegate
+-{
+-    CDVRemoteInjectionUIWebViewNotificationDelegate *notificationDelegate;
+-}
+-
+-- (void)initializeDelegate:(CDVRemoteInjectionPlugin *)plugin
+-{
+-    self.plugin = plugin;
+-
+-    // Wrap the current delegate with our own so we can hook into web view events.
+-    UIWebView *uiWebView = [plugin findWebView];
+-    notificationDelegate = [[CDVRemoteInjectionUIWebViewNotificationDelegate alloc] init];
+-    notificationDelegate.wrappedDelegate = [uiWebView delegate];
+-    notificationDelegate.webViewDelegate = self;
+-    [uiWebView setDelegate:notificationDelegate];
+-}
+-
+--(void) onWebViewDidStartLoad
+-{
+-    [super webViewRequestStart];
+-}
+-
+-/*
+- * After page load inject cordova and its plugins.
+- */
+-- (void) onWebViewDidFinishLoad:(UIWebView *)webView
+-{
+-    // Cancel the slow request timer.
+-    [self cancelRequestTimer];
+- 
+-    // Inject cordova into the page.
+-    NSString *scheme = webView.request.URL.scheme;
+- 
+-    if ([self isSupportedURLScheme:scheme]){
+-        [webView stringByEvaluatingJavaScriptFromString:[self buildInjectionJS]];
+-    }
+-}
+-
+-// Handles notifications from the webview delegate whenever a page load fails.
+-- (void) onWebViewFailLoadWithError:(NSError *)error
+-{
+-    [self loadPageFailure:error];
+-}
+-
+-- (BOOL) isLoading
+-{
+-    UIWebView *uiWebView = [self.plugin findWebView];
+-    return uiWebView.loading;
+-}
+-
+-- (void) retryCurrentRequest
+-{
+-    UIWebView *webView = [self.plugin findWebView];
+-    
+-    [webView stopLoading];
+-    [webView reload];
+-}
+-
+-@end
+```
+
+## Remove and re-add Android and iOS platforms after npm install
+
+```
+npm run cordova platform remove ios
+npm run cordova platform remove android
+```
+
+Add cordova-ios and cordova-android to devDependencies before re-adding ios and android so that we can patch-package cordova-ios
+
+```
+  "devDependencies": {
+    "cordova": "^10.0.0",
+    "cordova-android": "^9.0.0",
+    "cordova-ios": "^6.2.0",
+    "cordova-plugin-remote-injection": "^0.5.2",
+    "cordova-plugin-splashscreen": "^6.0.0",
+    "cordova-plugin-whitelist": "^1.3.4",
+    "patch-package": "^6.4.7"
+  },
+```
+
+run npm install so that patch-package will be run before we add ios and android platforms
+
+```
+npm install
+npm run cordova platform add ios
+npm run cordova platform add android
+```
+
+## Update config.xml with preferences and permissions
+
+Allow swipe and back buttons to navigate in mobile browser
+Restrict which domains we can load in the mobile browser
+
+```
+    <preference name="AllowBackForwardNavigationGestures" value="true" />
+
+    <!-- IOS App Bound Domains -->
+    <platform name="ios">
+        <config-file target="*-Info.plist" parent="WKAppBoundDomains">
+            <array>
+                <!-- <string>{YOUR_DOMAIN}</string> -->
+                <!-- <string>auth.{YOUR_DOMAIN}</string> -->
+                <string>http://192.168.1.250:3000</string>
+            </array>
+        </config-file>
+        <preference name="LimitsNavigationsToAppBoundDomains" value="true" />
+    </platform>
+
+    <!-- Misc permissions you may want in your app -->
+    <platform name="ios">
+        <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+            <string>need camera access to take pictures</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+            <string>need photo library access to get pictures from there</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+            <string>need location access to find things nearby</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSPhotoLibraryAddUsageDescription">
+            <string>need photo library access to save pictures there</string>
+        </config-file>
+    </platform>
+```
+
+## Update package.json scripts to make setup easy for other developers
+
+Update our scripts so other developers can setup their local Cordova (platforms and plugins folders) more easily
+
+```
+    "scripts": {
+        "cordova": "cordova",
+        "postinstall": "patch-package",
+        "run:android": "cordova run android -d",
+        "run:ios": "cordova run ios --debug -d",
+        "run:ios:release": "cordova run ios --release -d",
+        "setup": "npm install && npm run setup:ios && npm run setup:android",
+        "setup:android": "cordova platform add android",
+        "setup:ios": "cordova platform add ios"
+    },
+```
+
+We will commit our package.json and patch files, so other developers can just run
+
+```
+cd cordova
+npm run setup
+npm run run:android
+npm run run:ios
+```

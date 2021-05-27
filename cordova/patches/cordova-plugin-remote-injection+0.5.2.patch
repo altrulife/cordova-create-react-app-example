@@ -1,0 +1,165 @@
+diff --git a/node_modules/cordova-plugin-remote-injection/plugin.xml b/node_modules/cordova-plugin-remote-injection/plugin.xml
+index 9c79964..7164046 100644
+--- a/node_modules/cordova-plugin-remote-injection/plugin.xml
++++ b/node_modules/cordova-plugin-remote-injection/plugin.xml
+@@ -18,8 +18,6 @@
+     <source-file src="src/ios/CDVRemoteInjection.m" />
+     <header-file src="src/ios/CDVRemoteInjectionWebViewBaseDelegate.h" />
+     <source-file src="src/ios/CDVRemoteInjectionWebViewBaseDelegate.m" />
+-    <header-file src="src/ios/CDVRemoteInjectionUIWebViewDelegate.h" />
+-    <source-file src="src/ios/CDVRemoteInjectionUIWebViewDelegate.m" />
+     <header-file src="src/ios/CDVRemoteInjectionWKWebViewDelegate.h" />
+     <source-file src="src/ios/CDVRemoteInjectionWKWebViewDelegate.m" />
+   </platform>
+diff --git a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m
+index 9c11eb9..e152d3b 100644
+--- a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m
++++ b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjection.m
+@@ -6,7 +6,6 @@
+ #import <WebKit/WebKit.h>
+ 
+ #import "CDVRemoteInjection.h"
+-#import "CDVRemoteInjectionUIWebViewDelegate.h"
+ #import "CDVRemoteInjectionWKWebViewDelegate.h"
+ 
+ @implementation CDVRemoteInjectionPlugin {
+@@ -81,13 +80,7 @@
+     }
+ 
+     id webView = [self findWebView];
+-    if ([webView isKindOfClass:[UIWebView class]]) {
+-        NSLog(@"Found UIWebView");
+-        webViewDelegate = [[CDVRemoteInjectionUIWebViewDelegate alloc] init];
+-        [webViewDelegate initializeDelegate:self];
+-        
+-        return;
+-    } else if ([webView isKindOfClass:[WKWebView class]]) {
++    if ([webView isKindOfClass:[WKWebView class]]) {
+         NSLog(@"Found WKWebView");
+         webViewDelegate = [[CDVRemoteInjectionWKWebViewDelegate alloc] init];
+         [webViewDelegate initializeDelegate:self];
+diff --git a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.h b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.h
+deleted file mode 100644
+index b451824..0000000
+--- a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.h
++++ /dev/null
+@@ -1,13 +0,0 @@
+-#import "CDVRemoteInjection.h"
+-#import "CDVRemoteInjectionWebViewBaseDelegate.h"
+-
+-@interface CDVRemoteInjectionUIWebViewDelegate: CDVRemoteInjectionWebViewBaseDelegate <CDVRemoteInjectionWebViewDelegate>
+-@property (readwrite, weak) CDVRemoteInjectionPlugin *plugin;
+-- (void) onWebViewDidStartLoad;
+-- (void) onWebViewDidFinishLoad:(UIWebView *)webView;
+-- (void) onWebViewFailLoadWithError:(NSError *)error;
+-@end
+-
+-@interface CDVRemoteInjectionUIWebViewNotificationDelegate : WrappedDelegateProxy <UIWebViewDelegate>
+-@property (readwrite, weak) CDVRemoteInjectionUIWebViewDelegate *webViewDelegate;
+-@end
+diff --git a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.m b/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.m
+deleted file mode 100644
+index bb0251e..0000000
+--- a/node_modules/cordova-plugin-remote-injection/src/ios/CDVRemoteInjectionUIWebViewDelegate.m
++++ /dev/null
+@@ -1,100 +0,0 @@
+-//
+-//  CDVRemoteInjection.m
+-//
+-
+-#import <Foundation/Foundation.h>
+-
+-#import "CDVRemoteInjectionUIWebViewDelegate.h"
+-#import "CDVRemoteInjectionWebViewBaseDelegate.h"
+-
+-
+-@implementation CDVRemoteInjectionUIWebViewNotificationDelegate
+-@dynamic wrappedDelegate;
+-
+-- (void)webViewDidStartLoad:(UIWebView*)webView
+-{
+-    [self.webViewDelegate onWebViewDidStartLoad];
+-    
+-    if ([self.wrappedDelegate respondsToSelector:@selector(webViewDidStartLoad:)]) {
+-        [self.wrappedDelegate webViewDidStartLoad:webView];
+-    }
+-}
+-
+-- (void)webViewDidFinishLoad:(UIWebView *)webView
+-{
+-    [self.webViewDelegate onWebViewDidFinishLoad:webView];
+-    
+-    if ([self.wrappedDelegate respondsToSelector:@selector(webViewDidFinishLoad:)]) {
+-        [self.wrappedDelegate webViewDidFinishLoad:webView];
+-    }
+-}
+-
+-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
+-{
+-    if ([self.wrappedDelegate respondsToSelector:@selector(webView:didFailLoadWithError:)]) {
+-        [self.wrappedDelegate webView:webView didFailLoadWithError:error];
+-    }
+-    
+-    [self.webViewDelegate onWebViewFailLoadWithError:error];
+-}
+-@end
+-
+-@implementation CDVRemoteInjectionUIWebViewDelegate
+-{
+-    CDVRemoteInjectionUIWebViewNotificationDelegate *notificationDelegate;
+-}
+-
+-- (void)initializeDelegate:(CDVRemoteInjectionPlugin *)plugin
+-{
+-    self.plugin = plugin;
+-
+-    // Wrap the current delegate with our own so we can hook into web view events.
+-    UIWebView *uiWebView = [plugin findWebView];
+-    notificationDelegate = [[CDVRemoteInjectionUIWebViewNotificationDelegate alloc] init];
+-    notificationDelegate.wrappedDelegate = [uiWebView delegate];
+-    notificationDelegate.webViewDelegate = self;
+-    [uiWebView setDelegate:notificationDelegate];
+-}
+-
+--(void) onWebViewDidStartLoad
+-{
+-    [super webViewRequestStart];
+-}
+-
+-/*
+- * After page load inject cordova and its plugins.
+- */
+-- (void) onWebViewDidFinishLoad:(UIWebView *)webView
+-{
+-    // Cancel the slow request timer.
+-    [self cancelRequestTimer];
+- 
+-    // Inject cordova into the page.
+-    NSString *scheme = webView.request.URL.scheme;
+- 
+-    if ([self isSupportedURLScheme:scheme]){
+-        [webView stringByEvaluatingJavaScriptFromString:[self buildInjectionJS]];
+-    }
+-}
+-
+-// Handles notifications from the webview delegate whenever a page load fails.
+-- (void) onWebViewFailLoadWithError:(NSError *)error
+-{
+-    [self loadPageFailure:error];
+-}
+-
+-- (BOOL) isLoading
+-{
+-    UIWebView *uiWebView = [self.plugin findWebView];
+-    return uiWebView.loading;
+-}
+-
+-- (void) retryCurrentRequest
+-{
+-    UIWebView *webView = [self.plugin findWebView];
+-    
+-    [webView stopLoading];
+-    [webView reload];
+-}
+-
+-@end
